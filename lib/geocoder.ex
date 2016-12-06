@@ -5,9 +5,13 @@ defmodule Geocoder do
   @default_config [worker_module: Geocoder.Worker, name: {:local, @pool_name}]
 
   def pool_name, do: @pool_name
+  def worker_pool_config do
+    config = Application.get_env(:geocoder, :worker_pool_config) || []
+    Keyword.merge(config, @default_config)
+  end
+
   def worker_config do
-    Keyword.merge(Application.get_env(:geocoder, Geocoder.Worker) || [],
-                  @default_config)
+    Application.get_env(:geocoder, Geocoder.Worker) || []
   end
 
   def store_config do
@@ -18,7 +22,7 @@ defmodule Geocoder do
     import Supervisor.Spec
 
     children = [
-      :poolboy.child_spec(pool_name, worker_config, Application.get_env(:geocoder, :worker) || []),
+      :poolboy.child_spec(pool_name, worker_pool_config, worker_config),
       worker(Geocoder.Store, [store_config])
     ]
 
