@@ -100,7 +100,7 @@ defmodule Geocoder.Providers.OpenStreetMaps do
   defp request_all(path, params) do
     httpoison_options = Application.get_env(:geocoder, Geocoder.Worker)[:httpoison_options] || []
     case get(path, [], Keyword.merge(httpoison_options, params: Enum.into(params, %{}))) |> fmap(&Map.get(&1, :body)) do
-      {:ok, [list]} -> {:ok, [list]}
+      {:ok, list} when is_list(list) -> {:ok, list}
       {:ok, single} -> {:ok, [single]}
       other -> other
     end
@@ -108,8 +108,7 @@ defmodule Geocoder.Providers.OpenStreetMaps do
 
   defp request(path, params) do
     case request_all(path, params) do
-      {:ok, [head | _]} -> {:ok, head}
-      {:ok, [head]} -> {:ok, head}
+      {:ok, list} when is_list(list) -> {:ok, hd(list)}
       {:ok, head} -> {:ok, head}
       other -> other
     end
